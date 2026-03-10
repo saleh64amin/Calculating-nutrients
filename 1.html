@@ -423,7 +423,7 @@ function generateReport(){
   plainBullets.push(`Calculating nutrients اولا حساب العناصر الغذائية `);
 
   // 1) Combined block (will be numbered as 1.)
-  let combinedBlock = ` Calculating  BMI / IBW / AdjBW:\n`;
+  let combinedBlock = `(BMI / IBW / AdjBW):\n`;
   combinedBlock += `BMI = Weight kg ÷ Height (m)²\n${L}= ${f(AW,0)} ÷ (${f(H,2)})² = ${f(BMI,2)} kg/m²\n\n`;
   combinedBlock += `IBW = 25 × (Height (m))²\n${L}IBW = 25 × (${f(H,2)})² = ${f(IBW,1)} kg\n\n`;
   combinedBlock += `AdjBW = IBW + 0.4 × (ABW - IBW)\n${L}AdjBW = ${f(IBW,1)} + 0.4 × (${f(AW,0)} - ${f(IBW,1)}) = ${f(ADJBW,1)} kg`;
