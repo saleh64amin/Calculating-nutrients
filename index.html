@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حاسبة التغذية الإكلينيكية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --surface2: #1a2236;
+    --border: #1e3a5f;
+    --accent: #00d4ff;
+    --accent2: #00ff88;
+    --accent3: #ff6b6b;
+    --text: #48ff00;
+    --muted: #6b8aad;
+    --gold: #ffd166;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Cairo',sans-serif; min-height:100vh; overflow-x:hidden; position:relative; }
+  body::before { content:''; position:fixed; inset:0; background: radial-gradient(ellipse 80% 50% at 20% 10%, rgba(0,212,255,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,255,136,0.04) 0%, transparent 50%); pointer-events:none; z-index:0; }
+  .grid-bg { position:fixed; inset:0; background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+  .container { max-width:860px; margin:0 auto; padding:40px 20px 80px; position:relative; z-index:1; }
+  .header { text-align:center; margin-bottom:44px; animation:fadeDown 0.7s ease both; }
+  .header-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.3); padding:6px 18px; border-radius:50px; font-size:0.75rem; color:var(--accent); letter-spacing:2px; margin-bottom:16px; }
+  .header h1 { font-size:clamp(1.6rem,4vw,2.4rem); font-weight:900; background:linear-gradient(135deg,#fff 0%,var(--accent) 50%,var(--accent2) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .header p { color:var(--muted); margin-top:8px; font-size:0.9rem; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:16px; margin-bottom:22px; overflow:hidden; animation:fadeUp 0.5s ease both; transition:border-color 0.3s; }
+  .card:hover { border-color:rgba(0,212,255,0.25); }
+  .card-header { padding:16px 26px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border); background:var(--surface2); }
+  .step-num { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:700; color:#000; flex-shrink:0; }
+  .card-header h3 { font-size:0.95rem; font-weight:700; }
+  .card-body { padding:26px; }
+  .row { display:grid; gap:18px; }
+  .row-2 { grid-template-columns:1fr 1fr; }
+  .row-3 { grid-template-columns:1fr 1fr 1fr; }
+  label { display:block; font-size:0.78rem; font-weight:600; color:var(--muted); margin-bottom:7px; letter-spacing:0.5px; text-transform:uppercase; }
+  input, select { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:11px 15px; color:var(--text); font-family:'Cairo',sans-serif; font-size:0.95rem; transition:all 0.2s; appearance:none; -webkit-appearance:none; }
+  input:focus, select:focus { outline:none; border-color:var(--accent); background:rgba(0,212,255,0.04); box-shadow:0 0 0 3px rgba(0,212,255,0.1); }
+  input::placeholder { color:#3a5070; }
+  select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b8aad' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:left 14px center; padding-left:38px; }
+  .btn { padding:13px 26px; border:none; border-radius:10px; cursor:pointer; font-family:'Cairo',sans-serif; font-weight:700; font-size:0.95rem; transition:all 0.25s; display:inline-flex; align-items:center; gap:8px; justify-content:center; width:100%; margin-top:18px; }
+  .btn-primary { background:linear-gradient(135deg,var(--accent),#0099bb); color:#000; }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(0,212,255,0.35); }
+  .btn-success { background:linear-gradient(135deg,var(--accent2),#00aa55); color:#000; }
+  .btn-success:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(0,255,136,0.35); }
+  .btn-outline { background:transparent; border:1px solid var(--accent); color:var(--accent); width:auto; margin-top:0; padding:9px 20px; font-size:0.85rem; }
+  .btn-outline:hover { background:rgba(0,212,255,0.1); }
+  .bmi-result { display:none; margin-top:20px; padding:18px 22px; background:var(--bg); border:1px solid var(--border); border-radius:12px; }
+  .bmi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:16px; }
+  .bmi-stat { text-align:center; padding:12px; background:var(--surface2); border-radius:10px; border:1px solid var(--border); }
+  .bmi-stat .val { font-family:'JetBrains Mono',monospace; font-size:1.3rem; font-weight:700; color:var(--accent); }
+  .bmi-stat .lbl { font-size:0.72rem; color:var(--muted); margin-top:4px; }
+  .advice-pill { display:flex; align-items:flex-start; gap:10px; padding:12px 16px; border-radius:10px; font-size:0.88rem; line-height:1.6; }
+  .advice-pill.normal  { background:rgba(0,255,136,0.08); border:1px solid rgba(0,255,136,0.25); color:var(--accent2); }
+  .advice-pill.thin    { background:rgba(255,214,102,0.08); border:1px solid rgba(255,214,102,0.25); color:var(--gold); }
+  .advice-pill.overweight { background:rgba(255,165,0,0.08); border:1px solid rgba(255,165,0,0.25); color:orange; }
+  .advice-pill.obese   { background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); color:var(--accent3); }
+  .note { padding:9px 14px; border-radius:8px; font-size:0.8rem; margin-top:9px; display:flex; align-items:center; gap:7px; }
+  .note-green  { background:rgba(0,255,136,0.07); border:1px solid rgba(0,255,136,0.2); color:#7effc0; }
+  .note-yellow { background:rgba(255,214,102,0.07); border:1px solid rgba(255,214,102,0.2); color:var(--gold); }
+  .meal-row { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .meal-item label { font-size:0.75rem; text-align:center; }
+  .meal-item input { text-align:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1rem; padding:10px 6px; }
+  .total-indicator { text-align:center; margin-top:12px; font-size:0.85rem; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+  .total-indicator span { color:var(--accent); font-weight:700; }
+  .total-indicator.error span { color:var(--accent3); }
+  .hidden { display:none !important; }
+
+  /* OUTPUT */
+  .output-wrapper { display:none; }
+  .output-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .output-header h4 { font-size:1.05rem; font-weight:700; color:var(--accent); }
+  .report-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+  .report-inner { padding:32px 36px; font-size:0.97rem; line-height:2.1; direction:rtl; text-align:right; }
+  .r-bullet { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid rgba(30,58,95,0.5); }
+  .r-bullet:last-child { border-bottom:none; }
+  .r-dot { color:var(--accent); font-size:1.1rem; line-height:1.9; flex-shrink:0; }
+  .r-content { flex:1; }
+  .r-title { font-weight:700; color:var(--text); }
+  .r-label { color:var(--muted); font-size:0.88rem; display:block; }
+  .r-formula { font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:#8ab4cc; display:block; margin:1px 0; direction:ltr; text-align:left; unicode-bidi:embed; }
+  .r-result  { font-family:'JetBrains Mono',monospace; font-size:0.9rem; color:var(--text); display:block; direction:ltr; text-align:left; }
+  .hi  { color:var(--accent);  font-weight:700; }
+  .hi2 { color:var(--accent2); font-weight:700; }
+  .hi3 { color:var(--gold);    font-weight:700; }
+  .hi4 { color:#c084fc;        font-weight:700; }
+  .r-status { display:inline-block; padding:2px 14px; border-radius:20px; font-weight:700; font-size:0.88rem; }
+  .s-normal     { background:rgba(0,255,136,0.12); color:var(--accent2); border:1px solid rgba(0,255,136,0.3); }
+  .s-thin       { background:rgba(255,214,102,0.12); color:var(--gold); border:1px solid rgba(255,214,102,0.3); }
+  .s-overweight { background:rgba(255,165,0,0.12); color:orange; border:1px solid rgba(255,165,0,0.3); }
+  .s-obese      { background:rgba(255,107,107,0.12); color:var(--accent3); border:1px solid rgba(255,107,107,0.3); }
+  .r-section-title { font-size:1rem; font-weight:900; color:var(--accent); margin:22px 0 10px; padding-bottom:8px; border-bottom:2px solid var(--border); }
+  .meal-table { width:100%; border-collapse:collapse; margin-top:4px; font-size:0.88rem; }
+  .meal-table th { background:var(--surface2); color:var(--muted); padding:9px 12px; text-align:right; font-size:0.78rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid var(--border); }
+  .meal-table td { padding:10px 12px; border-bottom:1px solid rgba(30,58,95,0.4); }
+  .meal-table tr:last-child td { border-bottom:none; }
+  .meal-table tr:hover td { background:rgba(0,212,255,0.03); }
+  .td-mono { font-family:'JetBrains Mono',monospace; font-size:0.85rem; }
+
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(20px)}  to{opacity:1;transform:translateY(0)} }
+  @media(max-width:640px){
+    .row-2,.row-3{grid-template-columns:1fr}
+    .bmi-grid{grid-template-columns:repeat(3,1fr)}
+    .meal-row{grid-template-columns:repeat(3,1fr)}
+    .report-inner{padding:20px 16px}
+    .meal-table{font-size:0.78rem}
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="container">
+
+  <div class="header">
+    <div class="header-badge">🩺 Clinical Nutrition System</div>
+    <h1>حاسبة الاحتياجات الغذائية الإكلينيكية</h1>
+    <p>مخرجات بصيغة ثابتة — الأرقام وتصنيف BMI والوزن المستخدم هي المتغيرات الوحيدة</p>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="card">
+    <div class="card-header"><div class="step-num">١</div><h3>البيانات الأساسية</h3></div>
+    <div class="card-body">
+      <div class="row row-3">
+        <div>
+          <label>الجنس</label>
+          <select id="gender"><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select>
+        </div>
+        <div>
+          <label>الوزن الحالي (كجم)</label>
+          <input type="number" id="weight" placeholder="مثال: 56">
+        </div>
+        <div>
+          <label>الطول (متر)</label>
+          <input type="number" step="0.01" id="height" placeholder="مثال: 1.67">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="calcBMI()">⚡ حساب BMI وعرض التوصيات</button>
+      <div id="bmiResult" class="bmi-result">
+        <div class="bmi-grid">
+          <div class="bmi-stat"><div class="val" id="bmiDisp">—</div><div class="lbl">BMI (kg/m²)</div></div>
+          <div class="bmi-stat"><div class="val" id="ibwDisp">—</div><div class="lbl">الوزن المثالي IBW (كجم)</div></div>
+          <div class="bmi-stat"><div class="val" id="adjDisp">—</div><div class="lbl">الوزن المعدل AdjBW (كجم)</div></div>
+        </div>
+        <div id="advicePill" class="advice-pill normal"><span>💡</span><span id="adviceText"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="card hidden" id="step2Card">
+    <div class="card-header"><div class="step-num">٢</div><h3>اختيار الأوزان والمعاملات</h3></div>
+    <div class="card-body">
+      <div class="row row-2">
+        <div>
+          <label>الوزن لحساب السعرات</label>
+          <select id="weightForCal">
+            <option value="actual">الوزن الفعلي (ABW)</option>
+            <option value="ideal">الوزن المثالي (IBW)</option>
+            <option value="adj">الوزن المعدل (AdjBW)</option>
+          </select>
+        </div>
+        <div>
+          <label>الوزن لحساب البروتين</label>
+          <select id="weightForProt">
+            <option value="actual">الوزن الفعلي (ABW)</option>
+            <option value="ideal">الوزن المثالي (IBW)</option>
+            <option value="adj">الوزن المعدل (AdjBW)</option>
+          </select>
+        </div>
+        <div>
+          <label>معامل السعرات (kcal/kg)</label>
+          <select id="calFactor">
+            <option value="25">25</option>
+            <!-- <option value="26">26</option>
+            <option value="27">27</option>
+            <option value="28">28</option>
+            <option value="29">29</option> -->
+            <option value="30">30</option>
+          </select>
+        </div>
+        <div>
+          <label>معامل البروتين (g/kg)</label>
+          <input type="number" step="0.1" id="protFactor" value="1.0" min="0.8" max="1.5">
+          <div class="note note-green">📍 1.0 – 1.2 للمسن الطبيعي</div>
+          <div class="note note-yellow">📍 1.2 – 1.5 للأمراض المزمنة والحادة</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="card hidden" id="step3Card">
+    <div class="card-header"><div class="step-num">٣</div><h3>توزيع الوجبات (%)</h3></div>
+    <div class="card-body">
+      <div class="meal-row">
+        <div class="meal-item"><label>🌅 إفطار</label><input type="number" id="p_f" value="30"></div>
+        <div class="meal-item"><label>☀️ غداء</label><input type="number" id="p_l" value="30"></div>
+        <div class="meal-item"><label>🌙 عشاء</label><input type="number" id="p_d" value="20"></div>
+        <div class="meal-item"><label>🍎 سناك ١</label><input type="number" id="p_s1" value="10"></div>
+        <div class="meal-item"><label>🫐 سناك ٢</label><input type="number" id="p_s2" value="10"></div>
+      </div>
+      <div class="total-indicator" id="totalInd">المجموع: <span>100</span>%</div>
+      <button class="btn btn-success" onclick="generateReport()">📄 توليد المخرجات الثابتة</button>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="output-wrapper" id="outputWrapper">
+    <div class="output-header">
+      <h4>📄 المخرجات الغذائية</h4>
+      <button class="btn btn-outline" onclick="copyPlainText()">📋 نسخ للورد</button>
+    </div>
+    <div class="report-card">
+      <div class="report-inner" id="reportInner"></div>
+    </div>
+  </div>
+
+</div>
+<script>
+let AW=0, H=0, IBW=0, ADJBW=0, BMI=0, plainText='';
+
+['p_f','p_l','p_d','p_s1','p_s2'].forEach(id => document.getElementById(id).addEventListener('input', updateTotal));
+
+function updateTotal(){
+  const s=['p_f','p_l','p_d','p_s1','p_s2'].reduce((a,id)=>a+(parseFloat(document.getElementById(id).value)||0),0);
+  const ind=document.getElementById('totalInd');
+  ind.querySelector('span').textContent=s;
+  ind.className='total-indicator'+(s!==100?' error':'');
+}
+
+function calcBMI(){
+  AW=parseFloat(document.getElementById('weight').value);
+  H=parseFloat(document.getElementById('height').value);
+  if(!AW||!H){alert('من فضلك أدخل الطول والوزن');return;}
+  BMI=AW/(H*H); IBW=H*H*25; ADJBW=IBW+0.4*(AW-IBW);
+  document.getElementById('bmiDisp').textContent=BMI.toFixed(2);
+  document.getElementById('ibwDisp').textContent=IBW.toFixed(1);
+  document.getElementById('adjDisp').textContent=ADJBW.toFixed(1);
+  let cls,label,rec;
+  if(BMI<18.5)     {cls='thin';       label='نحافة — Underweight';   rec='يُنصح باستخدام الوزن المثالي (IBW) لحساب السعرات والبروتين.';}
+  else if(BMI<25)  {cls='normal';     label='وزن طبيعي — Normal';    rec='يُنصح باستخدام الوزن الفعلي (ABW) لحساب السعرات والبروتين.';}
+  else if(BMI<30)  {cls='overweight'; label='زيادة وزن — Overweight'; rec='يُنصح باستخدام الوزن المثالي (IBW) لحساب السعرات والبروتين.';}
+  else             {cls='obese';      label='سمنة — Obese';           rec='يُنصح باستخدام الوزن المعدل (AdjBW) للسعرات والوزن المثالي (IBW) للبروتين.';}
+  document.getElementById('advicePill').className=`advice-pill ${cls}`;
+  document.getElementById('adviceText').innerHTML=`<b>${label}</b> — ${rec}`;
+  document.getElementById('bmiResult').style.display='block';
+  document.getElementById('step2Card').classList.remove('hidden');
+  document.getElementById('step3Card').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('step2Card').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+function gW(t){return t==='actual'?AW:(t==='ideal'?IBW:ADJBW);}
+function gAbr(t){return t==='actual'?'ABW':(t==='ideal'?'IBW':'AdjBW');}
+function gFull(t){return t==='actual'?'Actual Body Weight':(t==='ideal'?'Ideal Body Weight':'Adjusted Body Weight');}
+function f(v,d=1){return parseFloat(v).toFixed(d);}
+
+function generateReport(){
+  const protF=parseFloat(document.getElementById('protFactor').value);
+  const calF=parseFloat(document.getElementById('calFactor').value);
+  if(protF<0.8||protF>1.5){alert('معامل البروتين يجب أن يكون بين 0.8 و 1.5');return;}
+  const mDefs=[
+    {id:'p_f', name:'إفطار',         ar:'إفطار'},
+    {id:'p_s1',name:'وجبة خفيفة ١',  ar:'وجبة خفيفة1'},
+    {id:'p_l', name:'غداء',           ar:'غداء'},
+    {id:'p_s2',name:'وجبة خفيفة ٢',  ar:'وجبة خفيفة2'},
+    {id:'p_d', name:'عشاء',           ar:'عشاء'},
+  ];
+  const meals=mDefs.map(m=>({...m,pct:parseFloat(document.getElementById(m.id).value)||0}));
+  const tot=meals.reduce((a,m)=>a+m.pct,0);
+  if(tot!==100){alert(`مجموع النسب ${tot}% وليس 100%`);return;}
+
+  const cT=document.getElementById('weightForCal').value;
+  const pT=document.getElementById('weightForProt').value;
+  const wC=gW(cT), wP=gW(pT);
+  const cAbr=gAbr(cT), pAbr=gAbr(pT);
+  const cFull=gFull(cT), pFull=gFull(pT);
+
+  const TE=wC*calF, protG=wP*protF, protK=protG*4;
+  const fatK=TE*0.25, fatG=fatK/9;
+  const carbK=TE-protK-fatK, carbG=carbK/4;
+
+  // BMI status
+  let bSt,bStC,bStAr;
+  if(BMI<18.5)    {bSt='Underweight'; bStC='s-thin';       bStAr='نحافة';}
+  else if(BMI<25) {bSt='Normal';      bStC='s-normal';     bStAr='طبيعي';}
+  else if(BMI<30) {bSt='Overweight';  bStC='s-overweight'; bStAr='زيادة وزن';}
+  else            {bSt='Obese';       bStC='s-obese';       bStAr='سمنة';}
+
+  // HTML meal rows
+  const mHtml=meals.filter(m=>m.pct>0).map(m=>{
+    const mK=(m.pct/100)*TE, mC=(m.pct/100)*carbG, mP=(m.pct/100)*protG, mF=(m.pct/100)*fatG;
+    return `<tr>
+      <td class="r-title">${m.name} (${m.pct}%)</td>
+      <td class="td-mono hi">${f(mK,0)} k.cal</td>
+      <td class="td-mono hi4">${f(mC,1)} gm</td>
+      <td class="td-mono hi2">${f(mP,1)} gm</td>
+      <td class="td-mono hi3">${f(mF,1)} gm</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('reportInner').innerHTML = `
+    <div class="r-bullet">
+      <div class="r-dot">●</div>
+      <div class="r-content">
+        <span class="r-title">(BMI) (Body Mass Index) مؤشر كتلة الجسم:</span><br>
+        <span class="r-formula">= Weight kg ÷ Height (m)²</span>
+        <span class="r-formula">= ${f(AW,0)} ÷ (${f(H,2)})² = <span class="hi">${f(BMI,2)} kg/m²</span></span>
+      </div>
+    </div>
+    <div class="r-bullet">
+      <div class="r-dot">●</div>
+      <div class="r-content">
+        إذاً هذه الحالة &nbsp;<span class="r-status ${bStC}">${bStAr} &nbsp;${bSt}</span>
+      </div>
+    </div>
+    <div class="r-bullet">
+      <div class="r-dot">●</div>
+      <div class="r-content">
+        <span class="r-title">(TE) (Total Energy) الطاقة الكلية:</span><br>
+        <span class="r-formula">= (${cAbr}) ${cFull} × ${calF}</span>
+        <span class="r-formula">= ${f(wC,1)} × ${calF} = <span class="hi">${f(TE,0)} k.cal</span></span>
+      </div>
+    </div>
+    <div class="r-bullet">
+      <div class="r-dot">●</div>
+      <div class="r-content">
+        <span class="r-title">(PTN) (Protein) حساب البروتين:</span><br>
+        <span class="r-label">القانون:</span>
+        <span class="r-formula">= (${pAbr}) ${pFull} × ${protF}</span>
+        <span class="r-label">الحل:</span>
+        <span class="r-formula">= ${f(wP,1)} × ${protF} = <span class="hi2">${f(protG,1)} gm</span></span>
+      </div>
+    </div>
+    <div class="r-bullet">
+      <div class="r-dot">●</div>
+      <div class="r-content">
+        <span class="r-title">Calories from Protein:</span><br>
+        <span class="r-label">القانون:</span>
+        <span class="r-formula">= Grams of PTN × 4</span>
+        <span class="r-label">الحل:</span>
+        <span class="r-formula">= ${f(protG,1)} × 4 = <span class="hi2">${f(protK,0)} k.cal</span></span>
+      </div>
+    </div>
+    <div class="r-bullet">
+      <div class="r-dot">●</div>
+      <div class="r-content">
+        <span class="r-title">Calories from Fats:</span><br>
+        <span class="r-label">القانون:</span>
+        <span class="r-formula">= 25% × TE</span>
+        <span class="r-label">الحل:</span>
+        <span class="r-formula">= 0.25 × ${f(TE,0)} = <span class="hi3">${f(fatK,0)} k.cal</span></span>
+      </div>
+    </div>
+    <div class="r-bullet">
+      <div class="r-dot">●</div>
+      <div class="r-content">
+        <span class="r-title">Grams of Fats:</span><br>
+        <span class="r-label">القانون:</span>
+        <span class="r-formula">= Calories from Fats ÷ 9</span>
+        <span class="r-label">الحل:</span>
+        <span class="r-formula">= ${f(fatK,0)} ÷ 9 = <span class="hi3">${f(fatG,1)} gm</span></span>
+      </div>
+    </div>
+    <div class="r-bullet">
+      <div class="r-dot">●</div>
+      <div class="r-content">
+        <span class="r-title">Calories from CHO:</span><br>
+        <span class="r-label">القانون:</span>
+        <span class="r-formula">= TE − (Calories from PTN + Calories from Fats)</span>
+        <span class="r-label">الحل:</span>
+        <span class="r-formula">= ${f(TE,0)} − (${f(protK,0)} + ${f(fatK,0)}) = <span class="hi4">${f(carbK,0)} k.cal</span></span>
+      </div>
+    </div>
+    <div class="r-bullet">
+      <div class="r-dot">●</div>
+      <div class="r-content">
+        <span class="r-title">Grams of CHO:</span><br>
+        <span class="r-label">القانون:</span>
+        <span class="r-formula">= Calories from CHO ÷ 4</span>
+        <span class="r-label">الحل:</span>
+        <span class="r-formula">= ${f(carbK,0)} ÷ 4 = <span class="hi4">${f(carbG,1)} gm</span></span>
+      </div>
+    </div>
+    <div class="r-section-title">ثانياً: توزيع الاحتياجات السابقة على الوجبات</div>
+    <table class="meal-table">
+      <thead><tr><th>الوجبة</th><th>السعرات</th><th>كربوهيدرات</th><th>بروتين</th><th>دهون</th></tr></thead>
+      <tbody>${mHtml}</tbody>
+    </table>
+  `;
+
+  // ---------- رقمنا النقاط داخل الـ HTML (بدلاً من الدائرة) ----------
+  document.querySelectorAll('.r-dot').forEach((el,i)=>{ el.textContent = (i+1) + '.'; });
+
+  // LRM = Left-to-Right Mark (U+200E) forces math lines to read LTR in Word RTL docs
+  const L = '\u200E';
+
+  // جهزنا نص مكوّن من عناصر (كل عنصر يمثل "نقطة") ثم نرقمها رقمياً عند الانتهاء
+  const mealLines = meals.filter(m=>m.pct>0).map(m=>{
+    const mK=(m.pct/100)*TE, mC=(m.pct/100)*carbG, mP=(m.pct/100)*protG, mF=(m.pct/100)*fatG;
+    return `${m.ar} (${m.pct}%): ${f(mK,0)} سعرة = (كربوهيدرات ${f(mC,1)}جم، بروتين ${f(mP,1)}جم، دهون ${f(mF,1)}جم).`;
+  });
+
+  const plainBullets = [];
+  plainBullets.push(`Calculating nutrients اولا حساب العناصر الغذائية `);
+
+  plainBullets.push(`(BMI) (Body Mass Index) مؤشر كتلة الجسم:\n${L}= Weight kg ÷ Height (m)²\n${L}= ${f(AW,0)} ÷ (${f(H,2)})² = ${f(BMI,2)} kg/m²`);
+  plainBullets.push(` ${bSt}اذا هذه الحالة .`);
+  plainBullets.push(`(TE) (Total Energy) الطاقة الكلية:\n${L}= (${cAbr}) ${cFull} × ${calF}\n${L}= ${f(wC,1)} × ${calF} = ${f(TE,0)} k.cal`);
+  plainBullets.push(`(PTN) (Protein) حساب البروتين:\nالقانون:\n${L}= (${pAbr}) ${pFull} × ${protF}\nالحل:\n${L}= ${f(wP,1)} × ${protF} = ${f(protG,1)} gm`);
+  plainBullets.push(`Calories from protein:\nالقانون:\n${L}= Grams of PTN × 4\nالحل:\n${L}= ${f(protG,1)} × 4 = ${f(protK,0)} k.cal`);
+  plainBullets.push(`Calories from Fats:\nالقانون:\n${L}= 25% × TE\nالحل:\n${L}= 0.25 × ${f(TE,0)} = ${f(fatK,0)} k.cal`);
+  plainBullets.push(`Grams of Fats:\nالقانون:\n${L}= Calories from Fats ÷ 9\nالحل:\n${L}= ${f(fatK,0)} ÷ 9 = ${f(fatG,1)} gm`);
+  plainBullets.push(`Calories from CHO:\nالقانون:\n${L}= TE - (Calories from PTN + Calories from Fats)\nالحل:\n${L}= ${f(TE,0)} - (${f(protK,0)} + ${f(fatK,0)}) = ${f(carbK,0)} k.cal`);
+  plainBullets.push(`Grams of CHO:\nالقانون:\n${L}= Calories from CHO ÷ 4\nالحل:\n${L}= ${f(carbK,0)} ÷ 4 = ${f(carbG,1)} gm`);
+  plainBullets.push(`ثانيا: توزيع الاحتياجات السابقة على الوجبات:`);
+
+  // أضف كل سطر وجبة كعنصر مستقل (لكي يُرقم رقمياً تباعاً)
+  mealLines.forEach(ln => plainBullets.push(ln));
+
+  // الآن نكوّن النص النهائي مع ترقيم رقمي من 1 إلى 9 (للعناصر من 1 إلى 9)، والعناصر من 10 فصاعداً بدون ترقيم
+  plainText = plainBullets[0] + '\n\n';
+  for(let i=1; i<plainBullets.length; i++){
+    if(i <= 9){
+      plainText += `${L}${i}. ${plainBullets[i]}\n\n`;
+    } else {
+      plainText += plainBullets[i] + '\n\n';
+    }
+  }
+  plainText = plainText.trim();
+
+  document.getElementById('outputWrapper').style.display='block';
+  setTimeout(()=>document.getElementById('outputWrapper').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+function copyPlainText(){
+  navigator.clipboard.writeText(plainText).then(()=>alert('✅ تم النسخ! يمكنك لصقه في Word.'));
+}
+</script>
+</body>
+</html>
