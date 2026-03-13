@@ -420,7 +420,7 @@ function generateReport(){
   });
 
   const plainBullets = [];
-  plainBullets.push(`Calculating nutrients اولا حساب العناصر الغذائية `);
+  plainBullets.push(`Calculating nutrients  اولا حساب الاحتياجات الغذائية `);
 
   // 1) Combined block (will be numbered as 1.)
   let combinedBlock = ` Calculating  BMI / IBW / AdjBW:\n`;
@@ -440,7 +440,7 @@ function generateReport(){
   plainBullets.push(`Grams of Fats:\nالقانون:\n${L}= Calories from Fats ÷ 9\nالحل:\n${L}= ${f(fatK,0)} ÷ 9 = ${f(fatG,1)} gm`);
   plainBullets.push(`Calories from CHO:\nالقانون:\n${L}= TE - (Calories from PTN + Calories from Fats)\nالحل:\n${L}= ${f(TE,0)} - (${f(protK,0)} + ${f(fatK,0)}) = ${f(carbK,0)} k.cal`);
   plainBullets.push(`Grams of CHO:\nالقانون:\n${L}= Calories from CHO ÷ 4\nالحل:\n${L}= ${f(carbK,0)} ÷ 4 = ${f(carbG,1)} gm`);
-  plainBullets.push(`ثانيا: توزيع الاحتياجات السابقة على الوجبات:`);
+  plainBullets.push(`ثانياً: توزيع الاحتياجات الغذائية على الوجبات`);
 
   // أضف كل سطر وجبة كعنصر مستقل (لكي يُرقم رقمياً تباعاً)
   mealLines.forEach(ln => plainBullets.push(ln));
