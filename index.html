@@ -424,8 +424,8 @@ function generateReport(){
 
   // 1) Combined block (will be numbered as 1.)
   let combinedBlock = ` Calculating  BMI / IBW / AdjBW:\n`;
-  combinedBlock += `BMI = Weight kg ÷ Height (m)²\n${L}= ${f(AW,0)} ÷ (${f(H,2)})² = ${f(BMI,2)} kg/m²\n\n`;
-  combinedBlock += `IBW = 25 × (Height (m))²\n${L}IBW = 25 × (${f(H,2)})² = ${f(IBW,1)} kg\n\n`;
+  combinedBlock += `BMI = Weight kg ÷ Height (m)²\n${L}= ${f(AW,0)} ÷ (${f(H,2)})² = ${f(BMI,2)} kg/m²\n`;
+  combinedBlock += `IBW = 25 × (Height (m))²\n${L}IBW = 25 × (${f(H,2)})² = ${f(IBW,1)} kg\n`;
   combinedBlock += `AdjBW = IBW + 0.4 × (ABW - IBW)\n${L}AdjBW = ${f(IBW,1)} + 0.4 × (${f(AW,0)} - ${f(IBW,1)}) = ${f(ADJBW,1)} kg`;
 
   plainBullets.push(combinedBlock);
@@ -446,12 +446,12 @@ function generateReport(){
   mealLines.forEach(ln => plainBullets.push(ln));
 
   // الآن نكوّن النص النهائي مع ترقيم رقمي من 1 إلى 9 (للعناصر من 1 إلى 9)، والعناصر من 10 فصاعداً بدون ترقيم
-  plainText = plainBullets[0] + '\n\n';
+  plainText = plainBullets[0] + '\n';
   for(let i=1; i<plainBullets.length; i++){
     if(i <= 9){
-      plainText += `${L}${i}. ${plainBullets[i]}\n\n`;
+      plainText += `${L}${i}. ${plainBullets[i]}\n`;
     } else {
-      plainText += plainBullets[i] + '\n\n';
+      plainText += plainBullets[i] + '\n';
     }
   }
   plainText = plainText.trim();
